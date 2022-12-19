@@ -107,9 +107,6 @@ for (line in lines) {
 # Authorize
 gs4_auth("my_email")
 
-# CSV export
-write.csv(final, "final.csv", row.names = FALSE)
-
 # Google Sheets export
 sheet_write(data_df, ss = "my_link", sheet = "scraper")
 
