@@ -64,51 +64,68 @@ links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0(links$pdf_link, ".pdf")
 # Add base URL if .pdf is not present
 links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0("https://dol.ny.gov/system/files/documents/", links$pdf_link))
 
-# Test dataset
-pdf_file <- pdf_text("https://dol.ny.gov/system/files/documents/2022/11/warn-avon-products-mid-hudson-2022-0049-11-4-2022.pdf")
+# Read PDF links
+pdf_texts <- data.frame(pdf_link = character(0), text = character(0))
+
+for (i in 1:nrow(links)) {
+  pdf_link <- links$pdf_link[i]
+  text <- tryCatch(pdf_text(pdf_link), error = function(e) NA)
+  pdf_texts <- rbind(pdf_texts, data.frame(pdf_link, text))
+}
+
+# For now, filter out NA errors
+pdf_texts <- pdf_texts %>% 
+  filter(text != "NA")
 
 # Split text into lines
-lines <- strsplit(pdf_file, "\n")[[1]]
+lines <- strsplit(pdf_texts$text, "\n")
 
-# Create dataframe
-data_df <- data.frame()
+# Create empty df to hold data
+data_df <- data.frame(text = character(0))
 
 # Create vector
-data_names <- c()
+data_names <- character(0)
 
-# Loop through text
-for (line in lines) {
-  # Check if  contains colon
-  matches <- regexpr(":\\s+(.+)", line)
-  if (matches > 0) {
-    data_name <- substr(line, 1, matches-1)
-    data_names <- c(data_names, data_name)
-    data_value <- substr(line, matches+2, nchar(line))
+# Loop
+for (i in 1:nrow(pdf_texts)) {
+  lines <- strsplit(pdf_texts$text[i], "\n")
+  new_row <- data.frame(matrix(NA, nrow = 1, ncol = length(data_names)))
+  colnames(new_row) <- data_names
+  new_row$text <- pdf_texts$text[i]
+  for (line in lines[[1]]) {
+    matches <- regexpr(":\\s+(.+)", line)
+    if (matches > 0) {
+      data_name <- substr(line, 1, matches-1)
+      data_value <- substr(line, matches+2, nchar(line))
+      new_row[data_name] <- data_value
+      if (!data_name %in% data_names) {
+        data_names <- c(data_names, data_name)
+      }
+    }
   }
-}
-
-# Create data frame
-data_df <- data.frame(matrix(ncol = length(data_names), nrow = 1))
-colnames(data_df) <- data_names
-
-# Loop through text
-for (line in lines) {
-  matches <- regexpr(":\\s+(.+)", line)
-  if (matches > 0) {
-    data_name <- substr(line, 1, matches-1)
-    data_value <- substr(line, matches+2, nchar(line))
-    data_df[1, data_name] <- data_value
+  missing_cols <- setdiff(colnames(data_df), colnames(new_row))
+  if (length(missing_cols) > 0) {
+    new_row[missing_cols] <- NA
   }
+  data_df <- rbind(data_df, new_row)
 }
-
 
 # Export ----
 
 # Authorize
 gs4_auth("my_email")
 
+# Remove text column
+data_df <- data_df %>% 
+  select(-text)
+
+# Remove link column
+pdf_texts <- pdf_texts %>% 
+  select(-pdf_link)
+
 # Google Sheets export
-sheet_write(data_df, ss = "my_link", sheet = "scraper")
+sheet_write(data_df, ss = "link", sheet = "scraper")
+sheet_write(pdf_texts, ss = "link", sheet = "pdf_texts")
 
 
 # Schedule with Launchd (Mac) ----
@@ -123,7 +140,7 @@ sheet_write(data_df, ss = "my_link", sheet = "scraper")
 # <key>ProgramArguments</key>
 # <array>
 # <string>/usr/local/bin/Rscript</string>
-# <string>/Users/my_path/layoff-scraper.R</string>
+# <string>my_path/layoff-scraper.R</string>
 # </array>
 # <key>StartInterval</key>
 # <integer>60</integer>
