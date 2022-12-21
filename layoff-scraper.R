@@ -37,32 +37,32 @@ colnames(links)[1] = "pdf_link"
 has_pdf <- str_detect(links$pdf_link, ".pdf")
 
 # Get dates
-dates <- webpage %>% 
-  html_nodes("td:nth-child(2)") %>% 
-  html_text() %>% 
-  as.data.frame 
+# dates <- webpage %>% 
+#  html_nodes("td:nth-child(2)") %>% 
+#  html_text() %>% 
+#  as.data.frame 
 
 # Rename
-colnames(dates)[1] = "Date"
+# colnames(dates)[1] = "Date"
 
 # Format dates
-dates$Date <- mdy(dates$Date)
+# dates$Date <- mdy(dates$Date)
 
 # Split
-dates <- dates %>% 
-  mutate(year = year(Date),
-         month = formatC(month(Date), width = 2, format = "d", flag = "0"),
-         pdf_url_date = paste0(year, "/", month))
+# dates <- dates %>% 
+#  mutate(year = year(Date),
+#         month = formatC(month(Date), width = 2, format = "d", flag = "0"),
+#         pdf_url_date = paste0(year, "/", month))
 
 
 # Add date if .pdf is not present
-links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0(dates$pdf_url_date, links$pdf_link))
+# links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0(dates$pdf_url_date, links$pdf_link))
 
 # Add .pdf if not present
-links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0(links$pdf_link, ".pdf"))
+# links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0(links$pdf_link, ".pdf"))
 
-# Add base URL if .pdf is not present
-links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0("https://dol.ny.gov/system/files/documents/", links$pdf_link))
+# Add domain if relative
+links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0("https://dol.ny.gov", links$pdf_link))
 
 # Read PDF links
 pdf_texts <- data.frame(pdf_link = character(0), text = character(0))
@@ -72,10 +72,6 @@ for (i in 1:nrow(links)) {
   text <- tryCatch(pdf_text(pdf_link), error = function(e) NA)
   pdf_texts <- rbind(pdf_texts, data.frame(pdf_link, text))
 }
-
-# For now, filter out NA errors
-pdf_texts <- pdf_texts %>% 
-  filter(text != "NA")
 
 # Split text into lines
 lines <- strsplit(pdf_texts$text, "\n")
@@ -119,14 +115,9 @@ gs4_auth("my_email")
 data_df <- data_df %>% 
   select(-text)
 
-# Remove link column
-pdf_texts <- pdf_texts %>% 
-  select(-pdf_link)
-
 # Google Sheets export
-sheet_write(data_df, ss = "link", sheet = "scraper")
-sheet_write(pdf_texts, ss = "link", sheet = "pdf_texts")
-
+sheet_write(data_df, ss = "LINK", sheet = "scraper")
+sheet_write(pdf_texts, ss = "LINK", sheet = "pdf_texts")
 
 # Schedule with Launchd (Mac) ----
 
