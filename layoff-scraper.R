@@ -5,6 +5,7 @@
 # Set up ----
 library(tidyverse)
 library(rvest)
+library(janitor)
 library(xml2)
 library(tidyr)
 library(pdftools)
@@ -23,6 +24,16 @@ webpage <- read_html(url)
 
 # Read table
 notices <- html_table(webpage)[[1]]
+
+# Clean names
+notices <- clean_names(notices)
+
+# Select company name from notices
+company_name <- notices %>% 
+  select(company_name)
+
+# Split
+company_name <- separate(company_name, company_name, into = c("company_name", "region"), sep = "-\\s+", extra = "merge")
 
 # Get PDF links
 links <- webpage %>% 
@@ -48,55 +59,53 @@ for (i in 1:nrow(links)) {
   pdf_texts <- rbind(pdf_texts, data.frame(pdf_link, text))
 }
 
-# Split text into lines
-lines <- strsplit(pdf_texts$text, "\n")
+# Clean whitespace and change into single space
+pdf_data <- pdf_texts
+pdf_data$text <- gsub("\\s+", " ", pdf_data$text)
 
-# Create empty df to hold data
-data_df <- data.frame(text = character(0))
+# Remove header
+pdf_data$text <- gsub(" NEW YORK STATE DEPARTMENT OF LABOR OFFICE OF DISLOCATED WORKERS PROGRAM ", "", pdf_data$text)
 
-# Create vector
-data_names <- character(0)
+# Split
+pdf_data <- separate(pdf_texts, text, into = c("Date of Notice", "Event Number", "Rapid Response Specialist", "Reason Stated for Filing", "Company", "County", "WDB Name", "Region", "Contact", "Phone", "Business Type", "Number Affected", "Total Employees", "Layoff Date", "Closing Date", "Reason for Dislocation", "FEIN NUM", "Union", "Classification"), sep = ":\\s+", extra = "merge")
 
-# Loop
-for (i in 1:nrow(pdf_texts)) {
-  lines <- strsplit(pdf_texts$text[i], "\n")
-  new_row <- data.frame(matrix(NA, nrow = 1, ncol = length(data_names)))
-  colnames(new_row) <- data_names
-  new_row$text <- pdf_texts$text[i]
-  for (line in lines[[1]]) {
-    matches <- regexpr(":\\s+(.+)", line)
-    if (matches > 0) {
-      data_name <- substr(line, 1, matches-1)
-      data_value <- substr(line, matches+2, nchar(line))
-      new_row[data_name] <- data_value
-      if (!data_name %in% data_names) {
-        data_names <- c(data_names, data_name)
-      }
-    }
-  }
-  missing_cols <- setdiff(colnames(data_df), colnames(new_row))
-  if (length(missing_cols) > 0) {
-    new_row[missing_cols] <- NA
-  }
-  data_df <- rbind(data_df, new_row)
-}
+# Extract
+date_of_notice <- str_extract(pdf_data$text, "Date of Notice:\\s*\\d{1,2}/\\d{1,2}/\\d{4}")
+event_number <- str_extract(pdf_data$text, "Event Number:\\s*\\d{4}-\\d{4}")
+rapid_response_specialist <- str_extract(pdf_data$text, "Rapid Response Specialist:\\s*[A-Za-z ]+")
+reason_stated_for_filing <- str_extract(pdf_data$text, "Reason Stated for Filing:\\s*[A-Za-z ]+")
+company <- str_extract(pdf_data$text, "Company:\\s*[A-Za-z0-9, .&-]+")
+county <- str_extract(pdf_data$text, "County:\\s*[A-Za-z ]+")
+wdb_name <- str_extract(pdf_data$text, "WDB Name:\\s*[A-Za-z ]+")
+region <- str_extract(pdf_data$text, "Region:\\s*[A-Za-z ]+")
+contact <- str_extract(pdf_data$text, "Contact:\\s*[A-Za-z ]+")
+phone <- str_extract(pdf_data$text, "Phone:\\s*[0-9() -]+")
+business_type <- str_extract(pdf_data$text, "Business Type:\\s*[A-Za-z0-9, .&-]+")
+number_affected <- str_extract(pdf_data$text, "Number Affected:\\s*\\d+")
+total_employees <- str_extract(pdf_data$text, "Total Employees:\\s*\\d+")
+layoff_date <- str_extract(pdf_data$text, "Layoff Date:\\s*[A-Za-z0-9, .&-]+")
+closing_date <- str_extract(pdf_data$text, "Closing Date:\\s*[A-Za-z0-9, .&-]+")
+reason_for_dislocation <- str_extract(pdf_data$text, "Reason for Dislocation:\\s*[A-Za-z0-9, .&-]+")
+fein_num <- str_extract(pdf_data$text, "FEIN NUM:\\s*[0-9-]+")
+union <- str_extract(pdf_data$text, "Union:\\s*(.*)")
+classification <- str_extract(pdf_data$text, "Classification:\\s*(\\S+)")
 
-# Remove text column
-data_df <- data_df %>% 
-  select(-text)
+# Combine into a data frame
+layoff_data <- data.frame(date_of_notice, event_number, rapid_response_specialist, 
+                 reason_stated_for_filing, company, county, wdb_name, region, 
+                 contact, phone, business_type, number_affected, total_employees, 
+                 layoff_date, closing_date, reason_for_dislocation, fein_num, 
+                 union, classification)
 
 # Export ----
 
 # Authorize
 gs4_auth("my_email")
 
-# Remove text column
-data_df <- data_df %>% 
-  select(-text)
-
 # Google Sheets export
-sheet_write(data_df, ss = "LINK", sheet = "scraper")
-sheet_write(pdf_texts, ss = "LINK", sheet = "pdf_texts")
+sheet_write(layoff_data, ss = "link", sheet = "scraper")
+sheet_write(pdf_texts, ss = "link", sheet = "pdf_texts")
+
 
 # Schedule with Launchd (Mac) ----
 
