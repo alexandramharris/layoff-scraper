@@ -36,31 +36,6 @@ colnames(links)[1] = "pdf_link"
 # Check for absolute versus relative links
 has_pdf <- str_detect(links$pdf_link, ".pdf")
 
-# Get dates
-# dates <- webpage %>% 
-#  html_nodes("td:nth-child(2)") %>% 
-#  html_text() %>% 
-#  as.data.frame 
-
-# Rename
-# colnames(dates)[1] = "Date"
-
-# Format dates
-# dates$Date <- mdy(dates$Date)
-
-# Split
-# dates <- dates %>% 
-#  mutate(year = year(Date),
-#         month = formatC(month(Date), width = 2, format = "d", flag = "0"),
-#         pdf_url_date = paste0(year, "/", month))
-
-
-# Add date if .pdf is not present
-# links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0(dates$pdf_url_date, links$pdf_link))
-
-# Add .pdf if not present
-# links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0(links$pdf_link, ".pdf"))
-
 # Add domain if relative
 links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0("https://dol.ny.gov", links$pdf_link))
 
@@ -105,6 +80,10 @@ for (i in 1:nrow(pdf_texts)) {
   }
   data_df <- rbind(data_df, new_row)
 }
+
+# Remove text column
+data_df <- data_df %>% 
+  select(-text)
 
 # Export ----
 
