@@ -65,10 +65,7 @@ pdf_data$text <- gsub("\\s+", " ", pdf_data$text)
 
 # Remove header
 pdf_data$text <- gsub(" NEW YORK STATE DEPARTMENT OF LABOR OFFICE OF DISLOCATED WORKERS PROGRAM ", "", pdf_data$text)
-
-# Split
-pdf_data <- separate(pdf_texts, text, into = c("Date of Notice", "Event Number", "Rapid Response Specialist", "Reason Stated for Filing", "Company", "County", "WDB Name", "Region", "Contact", "Phone", "Business Type", "Number Affected", "Total Employees", "Layoff Date", "Closing Date", "Reason for Dislocation", "FEIN NUM", "Union", "Classification"), sep = ":\\s+", extra = "merge")
-
+                   
 # Extract
 date_of_notice <- str_extract(pdf_data$text, "Date of Notice:\\s*\\d{1,2}/\\d{1,2}/\\d{4}")
 event_number <- str_extract(pdf_data$text, "Event Number:\\s*\\d{4}-\\d{4}")
