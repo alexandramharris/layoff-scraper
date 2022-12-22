@@ -65,27 +65,27 @@ pdf_data$text <- gsub("\\s+", " ", pdf_data$text)
 
 # Remove header
 pdf_data$text <- gsub(" NEW YORK STATE DEPARTMENT OF LABOR OFFICE OF DISLOCATED WORKERS PROGRAM ", "", pdf_data$text)
-                   
+
 # Extract
-date_of_notice <- str_extract(pdf_data$text, "Date of Notice:\\s*\\d{1,2}/\\d{1,2}/\\d{4}")
-event_number <- str_extract(pdf_data$text, "Event Number:\\s*\\d{4}-\\d{4}")
-rapid_response_specialist <- str_extract(pdf_data$text, "Rapid Response Specialist:\\s*[A-Za-z ]+")
-reason_stated_for_filing <- str_extract(pdf_data$text, "Reason Stated for Filing:\\s*[A-Za-z ]+")
-company <- str_extract(pdf_data$text, "Company:\\s*[A-Za-z0-9, .&-]+")
-county <- str_extract(pdf_data$text, "County:\\s*[A-Za-z ]+")
-wdb_name <- str_extract(pdf_data$text, "WDB Name:\\s*[A-Za-z ]+")
-region <- str_extract(pdf_data$text, "Region:\\s*[A-Za-z ]+")
-contact <- str_extract(pdf_data$text, "Contact:\\s*[A-Za-z ]+")
-phone <- str_extract(pdf_data$text, "Phone:\\s*[0-9() -]+")
-business_type <- str_extract(pdf_data$text, "Business Type:\\s*[A-Za-z0-9, .&-]+")
-number_affected <- str_extract(pdf_data$text, "Number Affected:\\s*\\d+")
-total_employees <- str_extract(pdf_data$text, "Total Employees:\\s*\\d+")
-layoff_date <- str_extract(pdf_data$text, "Layoff Date:\\s*[A-Za-z0-9, .&-]+")
-closing_date <- str_extract(pdf_data$text, "Closing Date:\\s*[A-Za-z0-9, .&-]+")
-reason_for_dislocation <- str_extract(pdf_data$text, "Reason for Dislocation:\\s*[A-Za-z0-9, .&-]+")
-fein_num <- str_extract(pdf_data$text, "FEIN NUM:\\s*[0-9-]+")
-union <- str_extract(pdf_data$text, "Union:\\s*(.*)")
-classification <- str_extract(pdf_data$text, "Classification:\\s*(\\S+)")
+date_of_notice <- str_trim(str_extract(pdf_data$text, "(?<=Date of Notice:).*(?=Event Number)"))
+event_number <- str_trim(str_extract(pdf_data$text, "(?<=Event Number:).*(?=Rapid Response Specialist)"))
+rapid_response_specialist <- str_trim(str_extract(pdf_data$text, "(?<=Rapid Response Specialist:).*(?=Reason Stated for Filing)"))
+reason_stated_for_filing <- str_trim(str_extract(pdf_data$text, "(?<=Reason Stated for Filing:).*(?=Company)"))
+company <- str_trim(str_extract(pdf_data$text, "(?<=Company:).*(?=County)"))
+county <- str_trim(str_extract(pdf_data$text, "(?<=County:).*(?=\\|WDB Name)"))
+wdb_name <- str_to_title(str_trim(str_extract(pdf_data$text, "(?<=WDB Name:).*(?=\\|)")))
+region <- str_trim(str_extract(pdf_data$text, "(?<=Region:).*(?=Contact)"))
+contact <- str_trim(str_extract(pdf_data$text, "(?<=Contact:).*(?=Phone)"))
+phone <- str_trim(str_extract(pdf_data$text, "(?<=Phone:).*(?=Business Type)"))
+business_type <- str_trim(str_extract(pdf_data$text, "(?<=Business Type:).*(?=Number Affected)"))
+number_affected <- str_trim(str_extract(pdf_data$text, "(?<=Number Affected:).*(?=Total Employees)"))
+total_employees <- str_trim(str_extract(pdf_data$text, "(?<=Total Employees:).*(?=Layoff Date)"))
+layoff_date <- str_trim(str_extract(pdf_data$text, "(?<=Layoff Date:).*(?=Closing Date)"))
+closing_date <- str_trim(str_extract(pdf_data$text, "(?<=Closing Date:).*(?=Reason for Dislocation)"))
+reason_for_dislocation <- str_trim(str_extract(pdf_data$text, "(?<=Reason for Dislocation:).*(?=FEIN Num)"))
+fein_num <- str_trim(str_extract(pdf_data$text, "(?<=FEIN Num:).*(?=Union)"))
+union <- str_trim(str_extract(pdf_data$text, "(?<=Union:).*(?=Classification)"))
+classification <- str_trim(str_extract(pdf_data$text, "(?<=Classification:).*"))
 
 # Combine into a data frame
 layoff_data <- data.frame(date_of_notice, event_number, rapid_response_specialist, 
@@ -94,14 +94,16 @@ layoff_data <- data.frame(date_of_notice, event_number, rapid_response_specialis
                  layoff_date, closing_date, reason_for_dislocation, fein_num, 
                  union, classification)
 
+
 # Export ----
 
 # Authorize
 gs4_auth("my_email")
 
 # Google Sheets export
-sheet_write(layoff_data, ss = "link", sheet = "scraper")
+sheet_write(layoff_data, ss = "link", sheet = "pdf_data")
 sheet_write(pdf_texts, ss = "link", sheet = "pdf_texts")
+
 
 
 # Schedule with Launchd (Mac) ----
