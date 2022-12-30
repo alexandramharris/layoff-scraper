@@ -67,7 +67,6 @@ pdf_data$text <- gsub("\\s+", " ", pdf_data$text)
 pdf_data$text <- gsub(" NEW YORK STATE DEPARTMENT OF LABOR OFFICE OF DISLOCATED WORKERS PROGRAM ", "", pdf_data$text)
 
 # Extract
-# Note: The location column can be used to account for random variations in formatting that impact county, wbd_name, and region
 date_of_notice <- str_trim(str_extract(pdf_data$text, "(?<=Date of Notice:).*?(?=Event Number)"))
 event_number <- str_trim(str_extract(pdf_data$text, "(?<=Event Number:).*?(?=Rapid Response Specialist)"))
 rapid_response_specialist <- str_trim(str_extract(pdf_data$text, "(?<=Rapid Response Specialist:).*?(?=Reason Stated for Filing)"))
@@ -97,14 +96,155 @@ layoff_data <- data.frame(date_of_notice, event_number, rapid_response_specialis
                  union, classification_and_additional_info)
 
 
+# Clean and format ----
+
+# Format and clean notice dates
+layoff_data <- layoff_data %>%
+  mutate(date_of_notice_additional_info = str_extract(date_of_notice, "(?<=[A-Za-z0-9])\\s(.*)")) %>%
+  mutate(date_of_notice = gsub("\\s.*", "", date_of_notice)) %>% 
+  select(date_of_notice, date_of_notice_additional_info, everything()) %>%
+  mutate(date_of_notice = trimws(date_of_notice),
+         date_of_notice_additional_info = trimws(date_of_notice_additional_info)) %>%
+  mutate(date_of_notice = mdy(date_of_notice)) %>%
+  mutate(date_of_notice_additional_info = gsub("&", "and", date_of_notice_additional_info)) %>%
+  mutate(date_of_notice_additional_info = str_to_title(date_of_notice_additional_info)) %>%
+  arrange(desc(date_of_notice))
+
+# Add month column
+layoff_data$month_year <- format(layoff_data$date_of_notice, "%B %Y")
+layoff_data <- layoff_data %>% 
+  select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+
+
+# Format number affected
+layoff_data <- layoff_data %>% 
+  mutate(raw_number_affected = number_affected) %>%
+  mutate(raw_number_affected = str_extract(raw_number_affected, "^\\S+")) %>% 
+  mutate(raw_number_affected = str_replace(raw_number_affected, ",", "")) %>% 
+  mutate(raw_number_affected = as.numeric(raw_number_affected)) %>% 
+  select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+
+# Format total employees
+layoff_data <- layoff_data %>% 
+  mutate(raw_total_employees = total_employees) %>%
+  mutate(raw_total_employees = str_extract(raw_total_employees, "^\\S+")) %>% 
+  mutate(raw_total_employees = str_replace(raw_total_employees, ",", "")) %>% 
+  mutate(raw_total_employees = as.numeric(raw_total_employees)) %>% 
+  select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, raw_total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+
+# Calculate not affected
+layoff_data <- layoff_data %>% 
+  mutate(not_affected = (raw_total_employees - raw_number_affected)) %>% 
+  select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+
+
+# Graphics ----
+
+# Create new_york dataset
+new_york <- layoff_data %>% 
+  summarize(`Companies` = n_distinct(company),
+            `Employees` = sum(raw_number_affected, na.rm = TRUE))
+
+# Create capital_region dataset
+capital_region <- layoff_data %>% 
+  filter(region == "Capital Region") %>% 
+  summarize(`Companies` = n_distinct(company),
+            `Employees` = sum(raw_number_affected, na.rm = TRUE))
+
+# Create mid_hudson dataset
+mid_hudson <- layoff_data %>%
+  filter(region == "Mid-Hudson Region") %>% 
+  summarize(`Companies` = n_distinct(company),
+            `Employees` = sum(raw_number_affected, na.rm = TRUE))
+
+# Create donut_one dataset
+donut_one <- layoff_data %>% 
+  filter(row_number() == 1) %>% 
+  mutate(`Affected` = sum(raw_number_affected)) %>% 
+  mutate(`Not affected` = sum(not_affected)) %>% 
+  select(`Affected`, `Not affected`) %>% 
+  stack()
+names(donut_one)[2] <- "Impact"
+names(donut_one)[1] <- "Employees"
+donut_one <- donut_one %>% 
+  select(Impact, Employees)
+
+# Create donut_two dataset
+donut_two <- layoff_data %>% 
+  filter(row_number() == 2) %>% 
+  mutate(`Affected` = sum(raw_number_affected)) %>% 
+  mutate(`Not affected` = sum(not_affected)) %>% 
+  select(`Affected`, `Not affected`) %>% 
+  stack()
+names(donut_two)[2] <- "Impact"
+names(donut_two)[1] <- "Employees"
+donut_two <- donut_two %>% 
+  select(Impact, Employees)
+
+# Create donut_three dataset
+donut_three <- layoff_data %>% 
+  filter(row_number() == 3) %>% 
+  mutate(`Affected` = sum(raw_number_affected)) %>% 
+  mutate(`Not affected` = sum(not_affected)) %>% 
+  select(`Affected`, `Not affected`) %>% 
+  stack()
+names(donut_three)[2] <- "Impact"
+names(donut_three)[1] <- "Employees"
+donut_three <- donut_three %>% 
+  select(Impact, Employees)
+  
+# Create line dataset
+line <- layoff_data %>% 
+  group_by(month_year) %>% 
+  summarize(total_employees_laid_off = sum(raw_number_affected)) %>% 
+  rename(Date = month_year,
+         "Total employees laid off" = total_employees_laid_off) %>% 
+  na.omit()
+  
+# Create map dataset
+map <- layoff_data %>% 
+  group_by(county) %>% 
+  summarize(total_employees_laid_off = sum(raw_number_affected)) %>% 
+  rename(County = county,
+         "Total employees laid off" = total_employees_laid_off) %>% 
+  na.omit()
+
+# Create bar dataset
+bar <- layoff_data %>% 
+  group_by(business_type) %>% 
+  summarize(total_employees_laid_off = sum(raw_number_affected)) %>% 
+  na.omit() %>% 
+  arrange(desc(total_employees_laid_off)) %>% 
+  head(10)
+
+bar$short_name <- str_extract(bar$business_type, "^\\w[\\w-]*( \\w[\\w-]*)?( \\w[\\w-]*)?")
+
+bar <- bar %>% 
+select(business_type, short_name, total_employees_laid_off) %>% 
+rename("Business type" = business_type,
+       "Short name" = short_name,
+       "Total employees laid off" = total_employees_laid_off)
+
+
+
 # Export ----
 
 # Authorize
 gs4_auth("my_email")
 
 # Google Sheets export
-sheet_write(layoff_data, ss = "link", sheet = "pdf_data")
-sheet_write(pdf_texts, ss = "link", sheet = "pdf_texts")
+sheet_write(layoff_data, ss = "LINK", sheet = "pdf_data")
+sheet_write(pdf_texts, ss = "LINK", sheet = "pdf_texts")
+sheet_write(new_york, ss = "LINK", sheet = "new_york")
+sheet_write(capital_region, ss = "LINK", sheet = "capital_region")
+sheet_write(mid_hudson, ss = "LINK", sheet = "mid_hudson")
+sheet_write(donut_one, ss = "LINK", sheet = "donut_one")
+sheet_write(donut_two, ss = "LINK", sheet = "donut_two")
+sheet_write(donut_three, ss = "LINK", sheet = "donut_three")
+sheet_write(line, ss = "LINK", sheet = "line")
+sheet_write(map, ss = "LINK", sheet = "map")
+sheet_write(bar, ss = "LINK", sheet = "bar")
+
 
 
 # Schedule with Launchd (Mac) ----
