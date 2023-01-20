@@ -12,6 +12,7 @@ library(pdftools)
 library(lubridate)
 library(stringr)
 library(googlesheets4)
+library(tidycensus)
 
 
 # Scraper ----
@@ -115,7 +116,6 @@ layoff_data$month_year <- format(layoff_data$date_of_notice, "%B %Y")
 layoff_data <- layoff_data %>% 
   select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
-
 # Format number affected
 layoff_data <- layoff_data %>% 
   mutate(raw_number_affected = number_affected) %>%
@@ -136,6 +136,22 @@ layoff_data <- layoff_data %>%
 layoff_data <- layoff_data %>% 
   mutate(not_affected = (raw_total_employees - raw_number_affected)) %>% 
   select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+
+# Add handling for rescission entries
+layoff_data$rescission_handling <- NA
+
+for (i in 1:nrow(layoff_data)) {
+  if (grepl("Rescission[:\\s]?", layoff_data$date_of_notice_additional_info[i])) {
+    layoff_data$rescission_handling[i] <- 0
+  } else {
+    layoff_data$rescission_handling[i] <- layoff_data$raw_number_affected[i]
+  } 
+  if (is.na(layoff_data$date_of_notice_additional_info[i])) {
+    layoff_data$rescission_handling[i] <- layoff_data$raw_number_affected[i]
+  }
+}
+
+layoff_data <- select(layoff_data, date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, rescission_handling, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
 
 # Graphics ----
@@ -209,6 +225,35 @@ map <- layoff_data %>%
          "Total employees laid off" = total_employees_laid_off) %>% 
   na.omit()
 
+# Find tidycensus variables
+v20 <- load_variables(2020, "acs5", cache = TRUE)
+
+# Get working age population (age 18-64) -- currently total population
+working_age_pop = get_acs(geography = "county",
+                          state = "NY",
+                          variables = "B01001_001",
+                          year = 2021,
+                          output = "wide")
+
+# Clean names
+working_age_pop <- clean_names(working_age_pop)
+working_age_pop$name <- substr(working_age_pop$name, 1, (regexpr(" County", working_age_pop$name)-1))
+colnames(working_age_pop)[colnames(working_age_pop) == "name"] <- "County"
+colnames(working_age_pop)[colnames(working_age_pop) == "b01001_001e"] <- "Population"
+
+# Join population data
+map <- left_join(working_age_pop, map, "County")
+
+# Select and filter
+map <- map %>%
+  select("County", "Population", "Total employees laid off") %>% 
+  filter(`Total employees laid off` != "NA")
+ 
+# Calculate rate
+map <- map %>% 
+  mutate(Rate = `Total employees laid off`/`Population`*100000)
+
+
 # Create bar dataset
 bar <- layoff_data %>% 
   group_by(business_type) %>% 
@@ -225,25 +270,6 @@ rename("Business type" = business_type,
        "Short name" = short_name,
        "Total employees laid off" = total_employees_laid_off)
 
-
-
-# Export ----
-
-# Authorize
-gs4_auth("my_email")
-
-# Google Sheets export
-sheet_write(layoff_data, ss = "LINK", sheet = "pdf_data")
-sheet_write(pdf_texts, ss = "LINK", sheet = "pdf_texts")
-sheet_write(new_york, ss = "LINK", sheet = "new_york")
-sheet_write(capital_region, ss = "LINK", sheet = "capital_region")
-sheet_write(mid_hudson, ss = "LINK", sheet = "mid_hudson")
-sheet_write(donut_one, ss = "LINK", sheet = "donut_one")
-sheet_write(donut_two, ss = "LINK", sheet = "donut_two")
-sheet_write(donut_three, ss = "LINK", sheet = "donut_three")
-sheet_write(line, ss = "LINK", sheet = "line")
-sheet_write(map, ss = "LINK", sheet = "map")
-sheet_write(bar, ss = "LINK", sheet = "bar")
 
 
 
