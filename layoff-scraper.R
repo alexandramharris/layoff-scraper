@@ -270,9 +270,26 @@ rename("Business type" = business_type,
        "Short name" = short_name,
        "Total employees laid off" = total_employees_laid_off)
 
+                   
+# Export ----
 
+# Authorize
+gs4_auth("my_email")
 
+# Google Sheets export
+sheet_write(layoff_data, ss = "LINK", sheet = "pdf_data")
+sheet_write(pdf_texts, ss = "LINK", sheet = "pdf_texts")
+sheet_write(new_york, ss = "LINK", sheet = "new_york")
+sheet_write(capital_region, ss = "LINK", sheet = "capital_region")
+sheet_write(mid_hudson, ss = "LINK", sheet = "mid_hudson")
+sheet_write(donut_one, ss = "LINK", sheet = "donut_one")
+sheet_write(donut_two, ss = "LINK", sheet = "donut_two")
+sheet_write(donut_three, ss = "LINK", sheet = "donut_three")
+sheet_write(line, ss = "LINK", sheet = "line")
+sheet_write(map, ss = "LINK", sheet = "map")
+sheet_write(bar, ss = "LINK", sheet = "bar")
 
+                   
 # Schedule with Launchd (Mac) ----
 
 # Save as .plist:
