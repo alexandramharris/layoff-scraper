@@ -137,23 +137,56 @@ layoff_data <- layoff_data %>%
   mutate(not_affected = (raw_total_employees - raw_number_affected)) %>% 
   select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
-# Add handling for rescission entries
-layoff_data$rescission_handling <- NA
+# Count occurrences of event number
+count <- layoff_data %>% 
+  group_by(event_number) %>% 
+  summarize(count = n())
+
+# Add handling for new rescission notices, setting affected employees to zero
+layoff_data$rescission_amend <- NA
 
 for (i in 1:nrow(layoff_data)) {
   if (grepl("Rescission[:\\s]?", layoff_data$date_of_notice_additional_info[i])) {
-    layoff_data$rescission_handling[i] <- 0
+    layoff_data$rescission_amend[i] <- 0
   } else {
-    layoff_data$rescission_handling[i] <- layoff_data$raw_number_affected[i]
+    layoff_data$rescission_amend[i] <- layoff_data$raw_number_affected[i]
   } 
   if (is.na(layoff_data$date_of_notice_additional_info[i])) {
-    layoff_data$rescission_handling[i] <- layoff_data$raw_number_affected[i]
+    layoff_data$rescission_amend[i] <- layoff_data$raw_number_affected[i]
   }
 }
 
-layoff_data <- select(layoff_data, date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, rescission_handling, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+layoff_data <- select(layoff_data, date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, rescission_amend, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
+# Locate old and now rescinded notice by event number and also set to zero
+for (i in 1:nrow(layoff_data)) {
+  if (grepl("Rescission[:\\s]?", layoff_data$date_of_notice_additional_info[i])) {
+    layoff_data$rescission_amend[i] <- 0
+    event_number <- layoff_data$event_number[i]
+    for (j in 1:nrow(layoff_data)) {
+      if (!is.na(layoff_data$event_number[j]) && layoff_data$event_number[j] == event_number) {
+        layoff_data$rescission_amend[j] <- 0
+      }
+    }
+  }
+}
 
+# Add handling for amendments — newest total affected is posted while old notice is set to 0
+for (i in 1:nrow(layoff_data)) {
+  
+  if (grepl("(?i)amend", layoff_data$date_of_notice_additional_info[i])) {
+    layoff_data$rescission_amend[i] <- layoff_data$raw_number_affected[i]
+    event_number <- layoff_data$event_number[i]
+    
+    for (j in 1:nrow(layoff_data)) {
+      if (!grepl("(?i)amend", layoff_data$date_of_notice_additional_info[j]) && !is.na(layoff_data$event_number[j]) && layoff_data$event_number[j] == event_number) {
+        layoff_data$rescission_amend[j] <- 0
+      }
+    }
+  }
+}          
+          
+                   
 # Graphics ----
 
 # Create new_york dataset
