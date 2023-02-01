@@ -8,8 +8,8 @@ jobs:
   run-scraper:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: r-lib/actions/setup-r@master
+    - uses: actions/checkout@main
+    - uses: r-lib/actions/setup-r@main
     
     - name: Install packages
       run: |
