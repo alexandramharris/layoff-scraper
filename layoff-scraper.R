@@ -307,49 +307,17 @@ rename("Business type" = business_type,
 # Export ----
 
 # Authorize
-gs4_auth("my_email")
+gs4_auth("alexandra.harris@timesunion.com")
 
 # Google Sheets export
-sheet_write(layoff_data, ss = "LINK", sheet = "pdf_data")
-sheet_write(pdf_texts, ss = "LINK", sheet = "pdf_texts")
-sheet_write(new_york, ss = "LINK", sheet = "new_york")
-sheet_write(capital_region, ss = "LINK", sheet = "capital_region")
-sheet_write(mid_hudson, ss = "LINK", sheet = "mid_hudson")
-sheet_write(donut_one, ss = "LINK", sheet = "donut_one")
-sheet_write(donut_two, ss = "LINK", sheet = "donut_two")
-sheet_write(donut_three, ss = "LINK", sheet = "donut_three")
-sheet_write(line, ss = "LINK", sheet = "line")
-sheet_write(map, ss = "LINK", sheet = "map")
-sheet_write(bar, ss = "LINK", sheet = "bar")
-
-                   
-# Schedule with Launchd (Mac) ----
-
-# Save as .plist:
-# <?xml version="1.0" encoding="UTF-8"?>
-# <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-# <plist version="1.0">
-# <dict>
-# <key>Label</key>
-# <string>com.layoff-scraper</string>
-# <key>ProgramArguments</key>
-# <array>
-# <string>/usr/local/bin/Rscript</string>
-# <string>my_path/layoff-scraper.R</string>
-# </array>
-# <key>StartInterval</key>
-# <integer>60</integer>
-# <key>KeepAlive</key>
-# <true/>
-# <key>PowerType</key>
-# <string>ACPower</string>
-# </dict>
-# </plist>
-
-# Save to /Libary/LaunchDaemons
-
-# Run in terminal:
-# sudo launchctl load /Library/LaunchDaemons/com.layoff-scraper.plist
-
-# Check:
-# launchctl list
+sheet_write(layoff_data, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_data")
+sheet_write(pdf_texts, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_texts")
+sheet_write(new_york, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "new_york")
+sheet_write(capital_region, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "capital_region")
+sheet_write(mid_hudson, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "mid_hudson")
+sheet_write(donut_one, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_one")
+sheet_write(donut_two, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_two")
+sheet_write(donut_three, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_three")
+sheet_write(line, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "line")
+sheet_write(map, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "map")
+sheet_write(bar, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "bar")
