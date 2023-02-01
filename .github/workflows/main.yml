@@ -10,7 +10,7 @@ jobs:
     
     steps:
       - uses: actions/checkout@master
-      - uses: r-lib/actions/setup-r@master
+      - uses: r-lib/actions@v2
     
       - name: Install packages
         run: |
