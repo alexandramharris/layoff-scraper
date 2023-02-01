@@ -23,6 +23,7 @@ jobs:
         R -e 'install.packages("stringr")'
         R -e 'install.packages("googlesheets4")'
         R -e 'install.packages("tidycensus")'
+        
     - name: Scrape
       run: Rscript layoff-scraper.R
     
