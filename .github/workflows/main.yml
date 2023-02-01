@@ -11,3 +11,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run layoff-scraper
       run: Rscript layoff-scraper.R
+    - uses: actions/setup-R@v1
+      with:
+        r-version: 4.0.2
+        r-packages: tidyverse, rvest, janitor, xml2, tidyr, pdftools, lubridate, stringr, googlesheets4, tidycensus
