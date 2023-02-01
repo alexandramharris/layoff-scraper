@@ -1,0 +1,13 @@
+name: Run layoff-scraper
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run layoff-scraper
+      run: Rscript layoff-scraper.R
