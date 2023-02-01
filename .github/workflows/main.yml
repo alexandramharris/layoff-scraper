@@ -1,17 +1,29 @@
-name: Run layoff-scraper
+name: Run layoff scraper
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '* * * * *'
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Run layoff-scraper
+    - uses: actions/checkout@master
+    - uses: r-lib/actions/setup-r@master
+    
+    - name: Install packages
+      run: |
+        R -e 'install.packages("tidyverse")'
+        R -e 'install.packages("rvest")'
+        R -e 'install.packages("janitor")'
+        R -e 'install.packages("xml2")'
+        R -e 'install.packages("tidyr")'
+        R -e 'install.packages("pdftools")'
+        R -e 'install.packages("lubridate")'
+        R -e 'install.packages("stringr")'
+        R -e 'install.packages("googlesheets4")'
+        R -e 'install.packages("tidycensus")'
+    - name: Scrape
       run: Rscript layoff-scraper.R
-    - uses: actions/setup-R@v1
-      with:
-        r-version: 4.0.2
-        r-packages: tidyverse, rvest, janitor, xml2, tidyr, pdftools, lubridate, stringr, googlesheets4, tidycensus
+    
+    
