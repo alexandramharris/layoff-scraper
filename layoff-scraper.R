@@ -307,7 +307,8 @@ rename("Business type" = business_type,
 # Export ----
 
 # Authorize
-gs4_auth("alexandra.harris@timesunion.com")
+Sys.setenv(credentials = "alexandra.harris@timesunion.com")
+gs4_auth("credentials")
 
 # Google Sheets export
 sheet_write(layoff_data, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_data")
