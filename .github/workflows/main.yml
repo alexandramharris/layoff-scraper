@@ -9,7 +9,6 @@ jobs:
   run-r-script:
     runs-on: ubuntu-latest
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
     steps:
