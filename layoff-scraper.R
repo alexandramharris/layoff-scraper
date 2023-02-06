@@ -11,6 +11,8 @@ library(tidyr)
 library(pdftools)
 library(lubridate)
 library(stringr)
+library(gargle)
+library(tokencodr)
 library(googlesheets4)
 library(tidycensus)
 
