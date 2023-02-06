@@ -36,7 +36,6 @@ jobs:
       - name: install-packages
         run: |
             remotes::install_github("jdtrat/tokencodr")
-        shell: RScript {0}
         
       - name: Scrape
         run: |
