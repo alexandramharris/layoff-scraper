@@ -308,7 +308,7 @@ rename("Business type" = business_type,
 
 # Authorize
 Sys.setenv(GOOGLE_CLIENT_ID = "GOOGLE_CLIENT_ID")
-Sys.setenv(GOOGLE_CLIENT_SECRET = "SECRET_KEY")
+Sys.setenv(GOOGLE_CLIENT_SECRET = "GOOGLE_CLIENT_SECRET")
 gs4_auth(Sys.getenv("GOOGLE_CLIENT_ID"), Sys.getenv("GOOGLE_CLIENT_SECRET"))
 
 # Google Sheets export
