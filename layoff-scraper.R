@@ -307,8 +307,9 @@ rename("Business type" = business_type,
 # Export ----
 
 # Authorize
-api_key <- Sys.getenv("SECRET_KEY")
-gs4_auth(api_key)
+Sys.setenv(GOOGLE_CLIENT_ID = "GOOGLE_CLIENT_ID")
+Sys.setenv(GOOGLE_CLIENT_SECRET = "SECRET_KEY")
+gs4_auth(Sys.getenv("GOOGLE_CLIENT_ID"), Sys.getenv("GOOGLE_CLIENT_SECRET"))
 
 # Google Sheets export
 sheet_write(layoff_data, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_data")
