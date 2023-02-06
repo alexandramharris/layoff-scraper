@@ -33,9 +33,10 @@ jobs:
             any::tidycensus
             any::remotes
             
-      - name: install-packages
+      - name: install-tokencodr-package
         run: |
-            remotes::install_github("jdtrat/tokencodr")
+          echo 'remotes::install_github("jdtrat/tokencodr")' > install-packages.R
+          Rscript install-packages.R
         
       - name: Scrape
         run: |
