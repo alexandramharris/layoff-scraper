@@ -31,7 +31,7 @@ jobs:
             any::stringr
             any::googlesheets4
             any::tidycensus
-            install.packages('remotes')
+            any::remotes
             remotes::install_github("jdtrat/tokencodr")
         
       - name: Scrape
