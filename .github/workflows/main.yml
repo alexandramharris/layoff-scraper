@@ -29,6 +29,7 @@ jobs:
             any::pdftools
             any::lubridate
             any::stringr
+            any::gargle
             any::googlesheets4
             any::tidycensus
         
