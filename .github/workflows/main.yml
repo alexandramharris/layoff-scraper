@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
     steps:
       - uses: actions/checkout@v3
