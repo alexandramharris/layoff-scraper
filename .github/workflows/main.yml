@@ -10,7 +10,7 @@ jobs:
   run-r-script:
     runs-on: ubuntu-latest
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.TOKEN }}
       GSHEET_LAYOFFS_PASSWORD: ${{ secrets.GSHEET_LAYOFFS_PASSWORD }}
 
     steps:
