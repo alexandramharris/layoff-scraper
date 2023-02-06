@@ -38,6 +38,16 @@ jobs:
         run: |
           echo 'remotes::install_github("jdtrat/tokencodr")' > install-packages.R
           Rscript install-packages.R
+          
+          
+      - name: Cache R dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ env.R_LIBS_USER }}-{{ env.GITHUB_SHA }}
+          restore-keys: |
+            ${{ env.R_LIBS_USER }}-
+
         
       - name: Scrape
         run: |
