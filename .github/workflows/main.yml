@@ -20,7 +20,7 @@ jobs:
           
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          packages: |-
+          packages: |
             any::tidyverse
             any::rvest
             any::janitor
@@ -32,7 +32,11 @@ jobs:
             any::googlesheets4
             any::tidycensus
             any::remotes
+            
+      - name: install-packages
+        run: |
             remotes::install_github("jdtrat/tokencodr")
+        shell: RScript {0}
         
       - name: Scrape
         run: |
