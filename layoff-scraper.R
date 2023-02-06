@@ -303,13 +303,16 @@ rename("Business type" = business_type,
        "Short name" = short_name,
        "Total employees laid off" = total_employees_laid_off)
 
+             
+# Authorize for actions ----
+auth_google <- function(email, service, token_path) {
+  googlesheets4::gs4_auth(email = "alexandra.harris@timesunion.com", path = tokencodr::decrypt_token(service = gsheet_layoffs,
+                                                                                                      path = '.secret/gsheet_layoffs',
+                                                                                                      complete = TRUE))
+}
+                   
                    
 # Export ----
-
-# Authorize
-Sys.setenv(GOOGLE_CLIENT_ID = "GOOGLE_CLIENT_ID")
-Sys.setenv(GOOGLE_CLIENT_SECRET = "GOOGLE_CLIENT_SECRET")
-gs4_auth(Sys.getenv("GOOGLE_CLIENT_ID"), Sys.getenv("GOOGLE_CLIENT_SECRET"))
 
 # Google Sheets export
 sheet_write(layoff_data, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_data")
