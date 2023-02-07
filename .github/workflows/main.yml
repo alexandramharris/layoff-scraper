@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.TOKEN }}
-      GSHEET_LAYOFFS_PASSWORD: ${{ secrets.GSHEET_LAYOFFS_PASSWORD }}
+      GSHEET_PRECIPITATION_PASSWORD: ${{ secrets.GSHEET_PRECIPITATION_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v3
