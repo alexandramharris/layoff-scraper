@@ -65,7 +65,6 @@ for (i in 1:nrow(links)) {
 company <- str_extract(pdf_texts$text, "(?<=Company:\n)[^\n]+")
 company <- str_trim(company)
 company <- str_trim(ifelse(is.na(company), "", company))
-
 address <- str_extract(pdf_texts$text, "(?<=Company:\n).*\n.*")
 address <- str_extract(address, "(?<=\n).*$")
 address <- str_trim(address)
@@ -121,8 +120,18 @@ layoff_data <- layoff_data %>%
          date_of_notice_additional_info = trimws(date_of_notice_additional_info)) %>%
   mutate(date_of_notice = mdy(date_of_notice)) %>%
   mutate(date_of_notice_additional_info = gsub("&", "and", date_of_notice_additional_info)) %>%
-  mutate(date_of_notice_additional_info = str_to_title(date_of_notice_additional_info)) %>%
-  arrange(desc(date_of_notice)) 
+  mutate(date_of_notice_additional_info = str_to_title(date_of_notice_additional_info))
+
+# Trim
+layoff_data <- layoff_data %>%
+  mutate(date_of_notice = trimws(date_of_notice)) %>% 
+  filter(!is.na(date_of_notice))
+
+# Add card date column
+layoff_data$card_date <- as_date(layoff_data$date_of_notice)
+layoff_data$card_date <- format(layoff_data$card_date, "%B %d, %Y")
+layoff_data <- layoff_data %>%
+  select(date_of_notice, card_date, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
 # Add month column
 layoff_data$month_year <- format(layoff_data$date_of_notice, "%B %Y")
@@ -301,7 +310,6 @@ map <- map %>%
 map <- map %>% 
   mutate(Rate = `Total employees laid off`/`Population`*10000)
 
-
 # Create bar dataset
 bar <- layoff_data %>% 
   filter(rescission_amend > 0) %>% 
@@ -317,7 +325,7 @@ bar <- bar %>%
  select(business_type, total_employees_laid_off) %>% 
  rename("Business type" = business_type,
        "Total employees laid off" = total_employees_laid_off)
-
+                   
 
 # Authorize for actions ----
 source("functions/func_auth_google.R")          
