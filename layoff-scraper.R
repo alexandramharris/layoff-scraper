@@ -130,6 +130,7 @@ layoff_data <- layoff_data %>%
 # Add card date column
 layoff_data$card_date <- as_date(layoff_data$date_of_notice)
 layoff_data$card_date <- format(layoff_data$card_date, "%B %d, %Y")
+layoff_data$card_date <- gsub(" 0", " ", layoff_data$card_date)
 layoff_data <- layoff_data %>%
   select(date_of_notice, card_date, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
