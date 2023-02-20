@@ -64,22 +64,15 @@ for (i in 1:nrow(links)) {
 # Extract company and address using regex for newlines
 company <- str_extract(pdf_texts$text, "(?<=Company:\n)[^\n]+")
 company <- str_trim(company)
-company <- na.omit(company)
+company <- str_trim(ifelse(is.na(company), "", company))
+
 address <- str_extract(pdf_texts$text, "(?<=Company:\n).*\n.*")
 address <- str_extract(address, "(?<=\n).*$")
 address <- str_trim(address)
+address <- str_trim(ifelse(is.na(address), "", address))
 
-# Check if second company name
-second_co <- str_extract(company, "(?<=, )[^,]+(?:LLC|Co\\.|Inc\\.)[,.]?")
-if (any(!is.na(second_co))) {
-  # Add second to company name
-  company <- paste(company, "and", second_co)
-  # Remove second company name from address
-  address <- gsub(paste0(second_co, "$"), "", address)
-}
-
-# Remove trailing
-company <- gsub(" and NA$", "", company)
+# Remove if not address
+address <- gsub("(.*)(LLC|Co\\.|Inc\\.)(.*)", "", address)
 
 # Clean whitespace and change into single space
 pdf_data <- pdf_texts
@@ -93,7 +86,6 @@ date_of_notice <- str_trim(str_extract(pdf_data$text, "(?<=Date of Notice:).*?(?
 event_number <- str_trim(str_extract(pdf_data$text, "(?<=Event Number:).*?(?=Rapid Response Specialist)"))
 rapid_response_specialist <- str_trim(str_extract(pdf_data$text, "(?<=Rapid Response Specialist:).*?(?=Reason Stated for Filing)"))
 reason_stated_for_filing <- str_trim(str_extract(pdf_data$text, "(?<=Reason Stated for Filing:).*?(?=Company)"))
-# company <- str_trim(str_extract(pdf_data$text, "(?<=Company:).*?(?=County)"))
 location <- str_to_title(str_trim(str_extract(pdf_data$text, "(?<=County:).*?(?=Contact)")))
 county <- str_trim(str_extract(pdf_data$text, "(?<=County:).*?(?=\\|WDB Name)"))
 wdb_name <- str_to_title(str_trim(str_extract(pdf_data$text, "(?<=WDB Name:).*?(?=\\|)")))
