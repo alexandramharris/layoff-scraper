@@ -61,6 +61,26 @@ for (i in 1:nrow(links)) {
   pdf_texts <- rbind(pdf_texts, data.frame(pdf_link, text))
 }
 
+# Extract company and address using regex for newlines
+company <- str_extract(pdf_texts$text, "(?<=Company:\n)[^\n]+")
+company <- str_trim(company)
+company <- na.omit(company)
+address <- str_extract(pdf_texts$text, "(?<=Company:\n).*\n.*")
+address <- str_extract(address, "(?<=\n).*$")
+address <- str_trim(address)
+
+# Check if second company name
+second_co <- str_extract(company, "(?<=, )[^,]+(?:LLC|Co\\.|Inc\\.)[,.]?")
+if (any(!is.na(second_co))) {
+  # Add second to company name
+  company <- paste(company, "and", second_co)
+  # Remove second company name from address
+  address <- gsub(paste0(second_co, "$"), "", address)
+}
+
+# Remove trailing
+company <- gsub(" and NA$", "", company)
+
 # Clean whitespace and change into single space
 pdf_data <- pdf_texts
 pdf_data$text <- gsub("\\s+", " ", pdf_data$text)
@@ -73,7 +93,7 @@ date_of_notice <- str_trim(str_extract(pdf_data$text, "(?<=Date of Notice:).*?(?
 event_number <- str_trim(str_extract(pdf_data$text, "(?<=Event Number:).*?(?=Rapid Response Specialist)"))
 rapid_response_specialist <- str_trim(str_extract(pdf_data$text, "(?<=Rapid Response Specialist:).*?(?=Reason Stated for Filing)"))
 reason_stated_for_filing <- str_trim(str_extract(pdf_data$text, "(?<=Reason Stated for Filing:).*?(?=Company)"))
-company <- str_trim(str_extract(pdf_data$text, "(?<=Company:).*?(?=County)"))
+# company <- str_trim(str_extract(pdf_data$text, "(?<=Company:).*?(?=County)"))
 location <- str_to_title(str_trim(str_extract(pdf_data$text, "(?<=County:).*?(?=Contact)")))
 county <- str_trim(str_extract(pdf_data$text, "(?<=County:).*?(?=\\|WDB Name)"))
 wdb_name <- str_to_title(str_trim(str_extract(pdf_data$text, "(?<=WDB Name:).*?(?=\\|)")))
@@ -92,7 +112,7 @@ classification_and_additional_info <- str_trim(str_extract(pdf_data$text, "(?<=C
 
 # Combine into a data frame
 layoff_data <- data.frame(date_of_notice, event_number, rapid_response_specialist, 
-                 reason_stated_for_filing, company, location, county, wdb_name, region, 
+                 reason_stated_for_filing, company, address, location, county, wdb_name, region, 
                  contact, phone, business_type, number_affected, total_employees, 
                  layoff_date, closing_date, reason_for_dislocation, fein_num, 
                  union, classification_and_additional_info)
@@ -110,7 +130,7 @@ layoff_data <- layoff_data %>%
   mutate(date_of_notice = mdy(date_of_notice)) %>%
   mutate(date_of_notice_additional_info = gsub("&", "and", date_of_notice_additional_info)) %>%
   mutate(date_of_notice_additional_info = str_to_title(date_of_notice_additional_info)) %>%
-  arrange(desc(date_of_notice))
+  arrange(desc(date_of_notice)) 
 
 # Add month column
 layoff_data$month_year <- format(layoff_data$date_of_notice, "%B %Y")
@@ -185,32 +205,32 @@ for (i in 1:nrow(layoff_data)) {
       }
     }
   }
-}          
-          
-                   
+}
+
+
 # Graphics ----
 
 # Create new_york dataset
 new_york <- layoff_data %>% 
   summarize(`Companies` = n_distinct(company),
-            `Employees` = sum(raw_number_affected, na.rm = TRUE))
+            `Employees` = sum(rescission_amend, na.rm = TRUE))
 
 # Create capital_region dataset
 capital_region <- layoff_data %>% 
   filter(region == "Capital Region") %>% 
   summarize(`Companies` = n_distinct(company),
-            `Employees` = sum(raw_number_affected, na.rm = TRUE))
+            `Employees` = sum(rescission_amend, na.rm = TRUE))
 
 # Create mid_hudson dataset
 mid_hudson <- layoff_data %>%
   filter(region == "Mid-Hudson Region") %>% 
   summarize(`Companies` = n_distinct(company),
-            `Employees` = sum(raw_number_affected, na.rm = TRUE))
+            `Employees` = sum(rescission_amend, na.rm = TRUE))
 
 # Create donut_one dataset
 donut_one <- layoff_data %>% 
   filter(row_number() == 1) %>% 
-  mutate(`Affected` = sum(raw_number_affected)) %>% 
+  mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
   select(`Affected`, `Not affected`) %>% 
   stack()
@@ -222,7 +242,7 @@ donut_one <- donut_one %>%
 # Create donut_two dataset
 donut_two <- layoff_data %>% 
   filter(row_number() == 2) %>% 
-  mutate(`Affected` = sum(raw_number_affected)) %>% 
+  mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
   select(`Affected`, `Not affected`) %>% 
   stack()
@@ -234,7 +254,7 @@ donut_two <- donut_two %>%
 # Create donut_three dataset
 donut_three <- layoff_data %>% 
   filter(row_number() == 3) %>% 
-  mutate(`Affected` = sum(raw_number_affected)) %>% 
+  mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
   select(`Affected`, `Not affected`) %>% 
   stack()
@@ -246,7 +266,7 @@ donut_three <- donut_three %>%
 # Create line dataset
 line <- layoff_data %>% 
   group_by(month_year) %>% 
-  summarize(total_employees_laid_off = sum(raw_number_affected)) %>% 
+  summarize(total_employees_laid_off = sum(rescission_amend)) %>% 
   rename(Date = month_year,
          "Total employees laid off" = total_employees_laid_off) %>% 
   na.omit()
@@ -254,10 +274,12 @@ line <- layoff_data %>%
 # Create map dataset
 map <- layoff_data %>% 
   group_by(county) %>% 
-  summarize(total_employees_laid_off = sum(raw_number_affected)) %>% 
+  summarize(total_employees_laid_off = sum(rescission_amend)) %>% 
   rename(County = county,
          "Total employees laid off" = total_employees_laid_off) %>% 
   na.omit()
+
+# Change population data to working age
 
 # Find tidycensus variables
 v20 <- load_variables(2020, "acs5", cache = TRUE)
@@ -285,33 +307,33 @@ map <- map %>%
  
 # Calculate rate
 map <- map %>% 
-  mutate(Rate = `Total employees laid off`/`Population`*100000)
+  mutate(Rate = `Total employees laid off`/`Population`*10000)
 
 
 # Create bar dataset
 bar <- layoff_data %>% 
+  filter(rescission_amend > 0) %>% 
   group_by(business_type) %>% 
-  summarize(total_employees_laid_off = sum(raw_number_affected)) %>% 
+  summarize(total_employees_laid_off = sum(rescission_amend)) %>% 
   na.omit() %>% 
   arrange(desc(total_employees_laid_off)) %>% 
   head(10)
 
-bar$short_name <- str_extract(bar$business_type, "^\\w[\\w-]*( \\w[\\w-]*)?( \\w[\\w-]*)?")
+bar$business_type <- str_to_sentence(bar$business_type)
 
 bar <- bar %>% 
-select(business_type, short_name, total_employees_laid_off) %>% 
-rename("Business type" = business_type,
-       "Short name" = short_name,
+ select(business_type, total_employees_laid_off) %>% 
+ rename("Business type" = business_type,
        "Total employees laid off" = total_employees_laid_off)
 
-             
+
 # Authorize for actions ----
 source("functions/func_auth_google.R")          
 auth_google(email = "alexandra.harris@timesunion.com",
             service = "gsheet_layoffs",
             token_path = ".secret/gsheet_layoffs")
                    
-                   
+
 # Export ----
 
 # Google Sheets export
