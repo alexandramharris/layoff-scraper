@@ -134,9 +134,9 @@ layoff_data <- layoff_data %>%
   select(date_of_notice, card_date, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
 # Add month column
-layoff_data$month_year <- format(layoff_data$date_of_notice, "%B %Y")
+layoff_data$month_year <- format(as.Date(layoff_data$date_of_notice), "%B %Y")
 layoff_data <- layoff_data %>% 
-  select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+  select(date_of_notice, card_date, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
 # Format number affected
 layoff_data <- layoff_data %>% 
@@ -144,7 +144,7 @@ layoff_data <- layoff_data %>%
   mutate(raw_number_affected = str_extract(raw_number_affected, "^\\S+")) %>% 
   mutate(raw_number_affected = str_replace(raw_number_affected, ",", "")) %>% 
   mutate(raw_number_affected = as.numeric(raw_number_affected)) %>% 
-  select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+  select(date_of_notice, card_date, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
 # Format total employees
 layoff_data <- layoff_data %>% 
@@ -152,12 +152,12 @@ layoff_data <- layoff_data %>%
   mutate(raw_total_employees = str_extract(raw_total_employees, "^\\S+")) %>% 
   mutate(raw_total_employees = str_replace(raw_total_employees, ",", "")) %>% 
   mutate(raw_total_employees = as.numeric(raw_total_employees)) %>% 
-  select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, raw_total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+  select(date_of_notice, card_date, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, raw_total_employees, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
 # Calculate not affected
 layoff_data <- layoff_data %>% 
   mutate(not_affected = (raw_total_employees - raw_number_affected)) %>% 
-  select(date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+  select(date_of_notice, card_date, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
 # Count occurrences of event number
 count <- layoff_data %>% 
@@ -178,7 +178,7 @@ for (i in 1:nrow(layoff_data)) {
   }
 }
 
-layoff_data <- select(layoff_data, date_of_notice, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, rescission_amend, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
+layoff_data <- select(layoff_data, date_of_notice, card_date, month_year, date_of_notice_additional_info, event_number, rapid_response_specialist, reason_stated_for_filing, company, address, location, county, wdb_name, region, contact, phone, business_type, number_affected, raw_number_affected, rescission_amend, total_employees, raw_total_employees, not_affected, layoff_date, closing_date, reason_for_dislocation, fein_num, union, classification_and_additional_info)
 
 # Locate old and now rescinded notice by event number and also set to zero
 for (i in 1:nrow(layoff_data)) {
@@ -325,6 +325,7 @@ bar <- bar %>%
  select(business_type, total_employees_laid_off) %>% 
  rename("Business type" = business_type,
        "Total employees laid off" = total_employees_laid_off)
+
                    
 
 # Authorize for actions ----
