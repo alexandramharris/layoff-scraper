@@ -220,7 +220,7 @@ warn_2022 <- read.csv("warn_2022.csv")
 all_warn <- rbind(warn_2021, warn_2022, layoff_data)
 
 # Create all line chart
-all_line <- layoff_data %>% 
+all_line <- all_warn %>% 
   group_by(month_year) %>% 
   summarize(total_employees_laid_off = sum(rescission_amend)) %>% 
   rename(Date = month_year,
