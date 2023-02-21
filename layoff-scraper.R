@@ -219,6 +219,14 @@ warn_2022 <- read.csv("warn_2022.csv")
 # Bind new data
 all_warn <- rbind(warn_2021, warn_2022)
 
+# Create all line chart
+all_line <- layoff_data %>% 
+  group_by(month_year) %>% 
+  summarize(total_employees_laid_off = sum(rescission_amend)) %>% 
+  rename(Date = month_year,
+         "Total employees laid off" = total_employees_laid_off) %>% 
+  na.omit()
+
 
 # Graphics ----
 
@@ -353,6 +361,7 @@ auth_google(email = "alexandra.harris@timesunion.com",
 sheet_write(layoff_data, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_data")
 sheet_write(pdf_texts, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_texts")
 sheet_write(all_warn, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "all_warn")
+sheet_write(all_line, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "all_line")
 sheet_write(new_york, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "new_york")
 sheet_write(capital_region, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "capital_region")
 sheet_write(mid_hudson, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "mid_hudson")
