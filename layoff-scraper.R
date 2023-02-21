@@ -210,6 +210,16 @@ for (i in 1:nrow(layoff_data)) {
 }
 
 
+# Bind to previous years ----
+
+# Load stored CSVs
+warn_2021 <- read.csv("warn_2021.csv")
+warn_2022 <- read.csv("warn_2022.csv")
+
+# Bind new data
+all_warn <- rbind(warn_2021, warn_2022)
+
+
 # Graphics ----
 
 # Create new_york dataset
@@ -281,8 +291,6 @@ map <- layoff_data %>%
          "Total employees laid off" = total_employees_laid_off) %>% 
   na.omit()
 
-# Change population data to working age
-
 # Find tidycensus variables
 v20 <- load_variables(2020, "acs5", cache = TRUE)
 
@@ -327,7 +335,6 @@ bar <- bar %>%
  rename("Business type" = business_type,
        "Total employees laid off" = total_employees_laid_off)
 
-                   
 
 # Authorize for actions ----
 source("functions/func_auth_google.R")          
@@ -338,9 +345,14 @@ auth_google(email = "alexandra.harris@timesunion.com",
 
 # Export ----
 
+# Store 2021 and 2022 data
+# write.csv(layoff_data, "warn_2021.csv", row.names=FALSE)
+# write.csv(layoff_data, "warn_2022.csv", row.names=FALSE)
+
 # Google Sheets export
 sheet_write(layoff_data, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_data")
 sheet_write(pdf_texts, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_texts")
+sheet_write(all_warn, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "all_warn")
 sheet_write(new_york, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "new_york")
 sheet_write(capital_region, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "capital_region")
 sheet_write(mid_hudson, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "mid_hudson")
@@ -350,3 +362,4 @@ sheet_write(donut_three, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9O
 sheet_write(line, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "line")
 sheet_write(map, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "map")
 sheet_write(bar, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "bar")
+
