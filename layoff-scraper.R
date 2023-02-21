@@ -217,7 +217,7 @@ warn_2021 <- read.csv("warn_2021.csv")
 warn_2022 <- read.csv("warn_2022.csv")
 
 # Bind new data
-all_warn <- rbind(warn_2021, warn_2022)
+all_warn <- rbind(warn_2021, warn_2022, layoff_data)
 
 # Create all line chart
 all_line <- layoff_data %>% 
