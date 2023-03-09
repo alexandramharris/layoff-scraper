@@ -106,6 +106,9 @@ fein_num <- str_trim(str_extract(pdf_data$text, "(?<=FEIN NUM:).*?(?=Union)"))
 union <- str_trim(str_extract(pdf_data$text, "(?<=Union:).*?(?=Classification)"))
 classification_and_additional_info <- str_trim(str_extract(pdf_data$text, "(?<=Classification:).*"))
 
+# Clean doing/business/as from company name
+company <- gsub("d/b/a (.*)", "(\\1)", company)
+                   
 # Combine into a data frame
 layoff_data <- data.frame(date_of_notice, event_number, rapid_response_specialist, 
                  reason_stated_for_filing, company, address, location, county, wdb_name, region, 
