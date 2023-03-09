@@ -33,6 +33,7 @@ jobs:
             any::googlesheets4
             any::tidycensus
             any::remotes
+            any::zoo
             
       - name: install-tokencodr-package
         run: |
