@@ -260,7 +260,8 @@ donut_one <- layoff_data %>%
   filter(row_number() == 1) %>% 
   mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
-  select(`Affected`, `Not affected`) %>% 
+  rename(`Total employees` = total_employees) %>% 
+  select(`Affected`, `Not affected`, `Total employees`) %>% 
   stack()
 names(donut_one)[2] <- "Impact"
 names(donut_one)[1] <- "Employees"
@@ -272,7 +273,8 @@ donut_two <- layoff_data %>%
   filter(row_number() == 2) %>% 
   mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
-  select(`Affected`, `Not affected`) %>% 
+  rename(`Total employees` = total_employees) %>% 
+  select(`Affected`, `Not affected`, `Total employees`) %>% 
   stack()
 names(donut_two)[2] <- "Impact"
 names(donut_two)[1] <- "Employees"
@@ -284,7 +286,8 @@ donut_three <- layoff_data %>%
   filter(row_number() == 3) %>% 
   mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
-  select(`Affected`, `Not affected`) %>% 
+  rename(`Total employees` = total_employees) %>% 
+  select(`Affected`, `Not affected`, `Total employees`) %>% 
   stack()
 names(donut_three)[2] <- "Impact"
 names(donut_three)[1] <- "Employees"
