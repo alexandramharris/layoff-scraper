@@ -254,45 +254,57 @@ mid_hudson <- layoff_data %>%
   filter(region == "Mid-Hudson Region") %>% 
   summarize(`Companies` = n_distinct(company),
             `Employees` = sum(rescission_amend, na.rm = TRUE))
-
 # Create donut_one dataset
 donut_one <- layoff_data %>% 
   filter(row_number() == 1) %>% 
   mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
-  rename(`Total employees` = total_employees) %>% 
-  select(`Affected`, `Not affected`, `Total employees`) %>% 
+  select(`Affected`, `Not affected`) %>% 
   stack()
+
 names(donut_one)[2] <- "Impact"
 names(donut_one)[1] <- "Employees"
 donut_one <- donut_one %>% 
   select(Impact, Employees)
+
+donut_one_total <- layoff_data %>% 
+  filter(row_number() == 1) %>% 
+  rename(`Total employees` = total_employees) %>% 
+  select(`Total employees`)
 
 # Create donut_two dataset
 donut_two <- layoff_data %>% 
   filter(row_number() == 2) %>% 
   mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
-  rename(`Total employees` = total_employees) %>% 
-  select(`Affected`, `Not affected`, `Total employees`) %>% 
+  select(`Affected`, `Not affected`) %>% 
   stack()
 names(donut_two)[2] <- "Impact"
 names(donut_two)[1] <- "Employees"
 donut_two <- donut_two %>% 
   select(Impact, Employees)
 
+donut_two_total <- layoff_data %>% 
+  filter(row_number() == 2) %>% 
+  rename(`Total employees` = total_employees) %>% 
+  select(`Total employees`)
+
 # Create donut_three dataset
 donut_three <- layoff_data %>% 
   filter(row_number() == 3) %>% 
   mutate(`Affected` = sum(rescission_amend)) %>% 
   mutate(`Not affected` = sum(not_affected)) %>% 
-  rename(`Total employees` = total_employees) %>% 
-  select(`Affected`, `Not affected`, `Total employees`) %>% 
+  select(`Affected`, `Not affected`) %>% 
   stack()
 names(donut_three)[2] <- "Impact"
 names(donut_three)[1] <- "Employees"
 donut_three <- donut_three %>% 
   select(Impact, Employees)
+
+donut_three_total <- layoff_data %>% 
+  filter(row_number() == 3) %>% 
+  rename(`Total employees` = total_employees) %>% 
+  select(`Total employees`)
   
 # Create line dataset
 line <- layoff_data %>% 
@@ -373,13 +385,18 @@ sheet_write(layoff_data, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9O
 sheet_write(pdf_texts, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_texts")
 sheet_write(all_warn, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "all_warn")
 sheet_write(all_line, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "all_line")
+sheet_write(all_daily_line_condensed, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "all_daily_line")
 sheet_write(new_york, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "new_york")
 sheet_write(capital_region, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "capital_region")
 sheet_write(mid_hudson, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "mid_hudson")
 sheet_write(donut_one, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_one")
+sheet_write(donut_one_total, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_one_total")
 sheet_write(donut_two, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_two")
+sheet_write(donut_two_total, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_two_total")
 sheet_write(donut_three, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_three")
+sheet_write(donut_three_total, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "donut_three_total")
 sheet_write(line, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "line")
 sheet_write(map, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "map")
 sheet_write(bar, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "bar")
+
 
