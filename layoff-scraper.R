@@ -14,6 +14,7 @@ library(stringr)
 library(tokencodr)
 library(googlesheets4)
 library(tidycensus)
+library(zoo)
 
 
 # Scraper ----
@@ -51,6 +52,12 @@ has_pdf <- str_detect(links$pdf_link, ".pdf")
 
 # Add domain if relative
 links$pdf_link <- ifelse(has_pdf, links$pdf_link, paste0("https://dol.ny.gov", links$pdf_link))
+
+# For 2021 only: check prefix of link
+# has_prefix <- str_starts(links$pdf_link, "/system/files/documents/")
+
+# Add domain and prefix if has prefix
+# links$pdf_link <- ifelse(has_prefix, paste0("https://dol.ny.gov", links$pdf_link), links$pdf_link)
 
 # Read PDF links
 pdf_texts <- data.frame(pdf_link = character(0), text = character(0))
@@ -108,7 +115,7 @@ classification_and_additional_info <- str_trim(str_extract(pdf_data$text, "(?<=C
 
 # Clean doing/business/as from company name
 company <- gsub("d/b/a (.*)", "(\\1)", company)
-                   
+
 # Combine into a data frame
 layoff_data <- data.frame(date_of_notice, event_number, rapid_response_specialist, 
                  reason_stated_for_filing, company, address, location, county, wdb_name, region, 
@@ -218,6 +225,11 @@ for (i in 1:nrow(layoff_data)) {
 }
 
 
+# Store old data ----
+# write.csv(layoff_data, "warn_2021.csv", row.names=FALSE)
+# sheet_write(layoff_data, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "pdf_data")
+
+
 # Bind to previous years ----
 
 # Load stored CSVs
@@ -227,16 +239,33 @@ warn_2022 <- read.csv("warn_2022.csv")
 # Bind new data
 all_warn <- rbind(layoff_data, warn_2022, warn_2021)
 
+# Format date
+all_warn_date <- all_warn %>% 
+  mutate(card_date = as.Date(card_date, format = "%B %d, %Y"))
+
+
+# Graphics ----
+
 # Create all line chart
-all_line <- all_warn %>% 
+all_line <- all_warn_date %>% 
   group_by(month_year) %>% 
   summarize(total_employees_laid_off = sum(rescission_amend)) %>% 
   rename(Date = month_year,
          "Total employees laid off" = total_employees_laid_off) %>% 
   na.omit()
 
+# Create all line daily chart
+all_daily_line <- all_warn_date %>% 
+  group_by(card_date) %>% 
+  summarize(total_employees_laid_off = sum(rescission_amend)) %>% 
+  rename(Date = card_date,
+         "Total employees laid off" = total_employees_laid_off) %>% 
+  na.omit() %>% 
+  mutate(`Weekly average` = rollmean(`Total employees laid off`, k = 7, align = "right", fill = NA))
 
-# Graphics ----
+# Create three-month all line daily chart
+all_daily_line_condensed <- all_daily_line %>% 
+  tail(90)
 
 # Create new_york dataset
 new_york <- layoff_data %>% 
@@ -254,6 +283,7 @@ mid_hudson <- layoff_data %>%
   filter(region == "Mid-Hudson Region") %>% 
   summarize(`Companies` = n_distinct(company),
             `Employees` = sum(rescission_amend, na.rm = TRUE))
+
 # Create donut_one dataset
 donut_one <- layoff_data %>% 
   filter(row_number() == 1) %>% 
@@ -308,10 +338,12 @@ donut_three_total <- layoff_data %>%
   
 # Create line dataset
 line <- layoff_data %>% 
-  group_by(month_year) %>% 
-  summarize(total_employees_laid_off = sum(rescission_amend)) %>% 
-  rename(Date = month_year,
-         "Total employees laid off" = total_employees_laid_off) %>% 
+  group_by(card_date) %>% 
+  summarize(total_employees_laid_off = sum(rescission_amend),
+            biweekly_average = (sum(rescission_amend)/14)) %>% 
+  rename(Date = card_date,
+         "Total employees laid off" = total_employees_laid_off,
+         "Bi-weekly average" = biweekly_average) %>% 
   na.omit()
   
 # Create map dataset
@@ -367,12 +399,22 @@ bar <- bar %>%
        "Total employees laid off" = total_employees_laid_off)
 
 
+# Encrypt API key (redact) ----
+
+# Actions encryption setup
+
+# Create environ
+
+# Encrypt
+
+# Authorize locally
+
 # Authorize for actions ----
 source("functions/func_auth_google.R")          
 auth_google(email = "alexandra.harris@timesunion.com",
             service = "gsheet_layoffs",
             token_path = ".secret/gsheet_layoffs")
-                   
+
 
 # Export ----
 
@@ -398,5 +440,3 @@ sheet_write(donut_three_total, ss = "https://docs.google.com/spreadsheets/d/10cc
 sheet_write(line, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "line")
 sheet_write(map, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "map")
 sheet_write(bar, ss = "https://docs.google.com/spreadsheets/d/10ccdzjb9OtuXKKow1j1oSdk7LXZb_5Q7x1Z0SMWv79g/edit#gid=723526670", sheet = "bar")
-
-
